@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 // Importa el módulo WASM desde public/pkg
 import init, { grayscale, invert } from '../../public/pkg/image_filter.js';
-import { saveImage, getImages } from '../db';
+import { saveImage, getImages, clearImages } from '../db';
 
 const ImageProcessor = () => {
   console.log("ImageProcessor cargado");
@@ -11,8 +11,9 @@ const ImageProcessor = () => {
   const [filter, setFilter] = useState('grayscale');
   const [imageProcessed, setImageProcessed] = useState(false); // Estado para controlar si la imagen está procesada
   const [savedImages, setSavedImages] = useState([]);
+  const [isImagesLoaded, setIsImagesLoaded] = useState(false); // Estado para saber si se presionó el botón de cargar imágenes
+  const [clearMessage, setClearMessage] = useState(''); // Mensaje para confirmar que la base de datos se vació
   const [originalImageData, setOriginalImageData] = useState(null); // Almacena la imagen original
-  const [imagesLoaded, setImagesLoaded] = useState(false); // Controla si las imágenes fueron cargadas
 
   // Referencia al elemento canvas
   const canvasRef = useRef(null);
@@ -94,7 +95,7 @@ const ImageProcessor = () => {
   };
 
   const loadSavedImages = () => {
-    setImagesLoaded(true); // Cambiar estado a `true` cuando el botón es presionado
+    setIsImagesLoaded(true); // Marca que hemos cargado las imágenes
     getImages().then(images => {
       console.log("Imágenes guardadas:", images);
       images.forEach(image => {
@@ -103,6 +104,13 @@ const ImageProcessor = () => {
       });
       const validImages = images.filter(image => image.width > 0 && image.height > 0);
       setSavedImages(validImages);
+    });
+  };
+
+  const emptyDatabase = () => {
+    clearImages().then(() => {
+      setSavedImages([]); // Vaciar el estado de las imágenes guardadas
+      setClearMessage('La base de datos ha sido vaciada exitosamente.');
     });
   };
 
@@ -151,7 +159,7 @@ const ImageProcessor = () => {
         <h3>Imágenes Guardadas</h3>
         <button onClick={loadSavedImages}>Cargar imágenes guardadas</button>
         <div>
-          {imagesLoaded && savedImages.length === 0 ? (  // Mostrar solo después de hacer clic
+          {isImagesLoaded && savedImages.length === 0 ? (  // Mostrar solo después de hacer clic
             <p>No hay imágenes guardadas</p>
           ) : (
             savedImages.map((image, index) => (
@@ -177,6 +185,10 @@ const ImageProcessor = () => {
           )}
         </div>
       </div>
+
+      {/* Botón para vaciar la base de datos */}
+      <button onClick={emptyDatabase}>Vaciar Base de Datos</button>
+      {clearMessage && <p>{clearMessage}</p>} {/* Mensaje de confirmación */}
     </div>
   );
 };
