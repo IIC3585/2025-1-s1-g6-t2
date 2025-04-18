@@ -2,13 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 // Importa el módulo WASM desde public/pkg
 import init, { grayscale, invert } from '../../public/pkg/image_filter.js';
 import { saveImage, getImages, clearImages } from '../db';
+import './ImageProcessor.css'; 
 
 const ImageProcessor = () => {
   console.log("ImageProcessor cargado");
   const [wasmLoaded, setWasmLoaded] = useState(false);
   const [imageData, setImageData] = useState(null); // Datos de la imagen original
   const [processedData, setProcessedData] = useState(null); // Imagen procesada
-  const [filter, setFilter] = useState('grayscale');
+  const [filter, setFilter] = useState('original');
   const [imageProcessed, setImageProcessed] = useState(false); // Estado para controlar si la imagen está procesada
   const [savedImages, setSavedImages] = useState([]);
   const [isImagesLoaded, setIsImagesLoaded] = useState(false); // Estado para saber si se presionó el botón de cargar imágenes
@@ -136,23 +137,28 @@ const ImageProcessor = () => {
       {imageData && (
         <>
           <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="original">Original</option> {/* Opción para volver al color original */}
             <option value="grayscale">Escala de grises</option>
             <option value="invert">Invertir colores</option>
-            <option value="original">Original</option> {/* Opción para volver al color original */}
           </select>
           <button onClick={processImage}>Procesar Imagen</button>
           {imageProcessed && <button onClick={saveImageData}>Guardar Imagen</button>} {/* Solo mostrar después de procesar */}
         </>
       )}
       {/* El canvas donde se renderizará la imagen procesada */}
-      {processedData && (
-        <canvas
-          ref={canvasRef}
-          width={processedData.width}
-          height={processedData.height}
-          style={{ border: '1px solid black' }}
-        />
-      )}
+      <div className='canvas-container'>
+          {processedData && (
+            <div className='canvas-wrapper'>
+              <h3>Imagen Procesada</h3>
+              <canvas
+                ref={canvasRef}
+                width={processedData.width}
+                height={processedData.height}
+                style={{ border: '1px solid black' }}
+              />
+            </div>
+          )}
+      </div>
 
       {/* Mostrar imágenes guardadas */}
       <div>
