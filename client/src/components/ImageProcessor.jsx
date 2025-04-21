@@ -101,25 +101,7 @@ const ImageProcessor = () => {
     }
   };
 
-  const loadSavedImages = () => {
-    setIsImagesLoaded(true); // Marca que hemos cargado las imágenes
-    getImages().then(images => {
-      console.log("Imágenes guardadas:", images);
-      images.forEach(image => {
-        console.log("width imagen guardada", image.width);
-        console.log("height imagen guardada", image.height);
-      });
-      const validImages = images.filter(image => image.width > 0 && image.height > 0);
-      setSavedImages(validImages);
-    });
-  };
 
-  const emptyDatabase = () => {
-    clearImages().then(() => {
-      setSavedImages([]); // Vaciar el estado de las imágenes guardadas
-      setClearMessage('La base de datos ha sido vaciada exitosamente.');
-    });
-  };
 
   return (
     <div>
@@ -171,7 +153,6 @@ const ImageProcessor = () => {
           {imageProcessed && <button onClick={saveImageData}>Guardar Imagen</button>} {/* Solo mostrar después de procesar */}
         </>
       )}
-      {/* El canvas donde se renderizará la imagen procesada */}
       <div className='canvas-container'>
         {processedData && (
           <div className='canvas-wrapper'>
@@ -185,8 +166,6 @@ const ImageProcessor = () => {
           </div>
         )}
       </div>
-
-      {/* Mostrar imágenes guardadas */}
       
     </div>
   );

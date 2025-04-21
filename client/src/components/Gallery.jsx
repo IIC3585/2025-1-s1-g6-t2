@@ -13,25 +13,6 @@ const Gallery = () => {
     });
   }, []);
 
-  const handleClearDatabase = () => {
-    clearImages().then(() => {
-      setSavedImages([]);
-    });
-  };
-
-  const saveImageData = () => {
-      if (processedData) {
-        console.log("Guardando imagen...");
-        saveImage({
-          data: Array.from(processedData.data),
-          width: processedData.width,
-          height: processedData.height
-        });
-        console.log("width", processedData.width);
-        console.log("height", processedData.height);
-        alert('Imagen guardada');
-      }
-    };
   
     const loadSavedImages = () => {
       setIsImagesLoaded(true); // Marca que hemos cargado las imágenes
@@ -84,42 +65,10 @@ const Gallery = () => {
             ))
           )}
         </div>
+        <button onClick={emptyDatabase}>Vaciar Base de Datos</button>
+        {clearMessage && <p>{clearMessage}</p>} {/* Mensaje de confirmación */}
     </div>
   );
 };
 
 export default Gallery;
-
-
-// { <div>
-//         <h3>Imágenes Guardadas</h3>
-//         <button onClick={loadSavedImages}>Cargar imágenes guardadas</button>
-//         <div>
-//           {isImagesLoaded && savedImages.length === 0 ? (  // Mostrar solo después de hacer clic
-//             <p>No hay imágenes guardadas</p>
-//           ) : (
-//             savedImages.map((image, index) => (
-//               <div key={index}>
-//                 <canvas
-//                   width={image.width}
-//                   height={image.height}
-//                   style={{ border: '1px solid black' }}
-//                   ref={(canvas) => {
-//                     if (canvas) {
-//                       const ctx = canvas.getContext('2d');
-//                       const imgData = new ImageData(
-//                         new Uint8ClampedArray(image.data),
-//                         image.width,
-//                         image.height
-//                       );
-//                       ctx.putImageData(imgData, 0, 0);
-//                     }
-//                   }}
-//                 />
-//               </div>
-//             ))
-//           )}
-//         </div>
-//       </div>
-
-//        }
