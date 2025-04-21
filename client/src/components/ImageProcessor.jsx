@@ -1,22 +1,27 @@
 import React, { useEffect, useState, useRef } from 'react';
-// Importa el módulo WASM desde public/pkg
 import init, { grayscale, invert, sepia, brightness, contrast } from '../../public/pkg/image_filter.js';
-import { saveImage, getImages, clearImages } from '../db';
-import './ImageProcessor.css'; 
+import { saveImage } from '../db';
+import './ImageProcessor.css';
 
-const ImageProcessor = () => {
-  console.log("ImageProcessor cargado");
+const defaultStyles = {
+  theme: 'light',
+  fontFamily: 'sans',
+  borderRadius: 'rounded',
+  textColor: '#000000',
+};
+
+const ImageProcessor = ({ styleSettings }) => {
   const [wasmLoaded, setWasmLoaded] = useState(false);
-  const [imageData, setImageData] = useState(null); // Datos de la imagen original
-  const [processedData, setProcessedData] = useState(null); // Imagen procesada
+  const [imageData, setImageData] = useState(null);
+  const [processedData, setProcessedData] = useState(null);
   const [filter, setFilter] = useState('original');
-  const [brightnessFactor, setBrightnessFactor] = useState(1); // Control de brillo
-  const [contrastFactor, setContrastFactor] = useState(1); // Control de contraste
-  const [imageProcessed, setImageProcessed] = useState(false); // Estado para controlar si la imagen está procesada
-  
-  const [originalImageData, setOriginalImageData] = useState(null); // Almacena la imagen original
+  const [brightnessFactor, setBrightnessFactor] = useState(1);
+  const [contrastFactor, setContrastFactor] = useState(1);
+  const [imageProcessed, setImageProcessed] = useState(false);
+  const [originalImageData, setOriginalImageData] = useState(null);
+  const [previewSettings, setPreviewSettings] = useState(defaultStyles);
+  const [tempSettings, setTempSettings] = useState(defaultStyles);
 
-  // Referencia al elemento canvas
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -29,13 +34,21 @@ const ImageProcessor = () => {
     loadWasm();
   }, []);
 
-  // Efecto para actualizar el canvas cada vez que processedData cambia.
   useEffect(() => {
     if (canvasRef.current && processedData) {
       const ctx = canvasRef.current.getContext('2d');
       ctx.putImageData(processedData, 0, 0);
     }
   }, [processedData]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('userStyles');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setTempSettings(parsed);
+      setPreviewSettings(parsed);
+    }
+  }, []);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -51,7 +64,7 @@ const ImageProcessor = () => {
         ctx.drawImage(img, 0, 0);
         const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
         setImageData({ data, width: canvas.width, height: canvas.height });
-        setOriginalImageData({ data, width: canvas.width, height: canvas.height }); // Guardamos la imagen original
+        setOriginalImageData({ data, width: canvas.width, height: canvas.height });
       };
       img.src = ev.target.result;
     };
@@ -61,8 +74,9 @@ const ImageProcessor = () => {
   const processImage = () => {
     if (!imageData || imageData.width === 0 || imageData.height === 0) return;
     let result;
+
     if (filter === 'grayscale') {
-      result = grayscale(imageData.data.data); // La función espera un array de píxeles
+      result = grayscale(imageData.data.data);
     } else if (filter === 'invert') {
       result = invert(imageData.data.data);
     } else if (filter === 'sepia') {
@@ -72,7 +86,7 @@ const ImageProcessor = () => {
     } else if (filter === 'contrast') {
       result = contrast(imageData.data.data, contrastFactor);
     } else if (filter === 'original') {
-      result = originalImageData.data.data; // Restaurar la imagen original
+      result = originalImageData.data.data;
     }
 
     if (!result || result.length === 0) return;
@@ -83,8 +97,7 @@ const ImageProcessor = () => {
       imageData.height
     );
     setProcessedData(newImageData);
-    setImageProcessed(true); // Indicar que la imagen fue procesada
-    // notifyProcessComplete();
+    setImageProcessed(true);
   };
 
   const saveImageData = () => {
@@ -95,24 +108,53 @@ const ImageProcessor = () => {
         width: processedData.width,
         height: processedData.height
       });
-      console.log("width", processedData.width);
-      console.log("height", processedData.height);
       alert('Imagen guardada');
     }
   };
 
+  const getFontFamily = (key) => {
+    switch (key) {
+      case 'sans':
+        return 'ui-sans-serif, system-ui';
+      case 'serif':
+        return 'ui-serif, Georgia';
+      case 'mono':
+        return 'ui-monospace, SFMono-Regular';
+      default:
+        return 'ui-sans-serif, system-ui';
+    }
+  };
 
+  // Clases dinámicas desde styleSettings
+  const buttonClass = `bg-${styleSettings.primaryColor}-500 hover:bg-${styleSettings.primaryColor}-700 text-white font-bold py-2 px-4 rounded-${styleSettings.borderRadius} font-${styleSettings.font}`;
+  const selectClass = `border p-2 rounded-${styleSettings.borderRadius} font-${styleSettings.font}`;
+  const labelClass = `block mt-4 mb-1 font-${styleSettings.font}`;
+  const textColorClass = styleSettings.textColor;
 
   return (
-    <div>
-      <h1>DCCPhotoEdition</h1>
-      <h4>Procesamiento de Imágenes con WASM</h4>
-      {!wasmLoaded && <p>Cargando módulo WASM...</p>}
-      <input type="file" accept="image/*" onChange={handleFileUpload} />
+    <div className={`font-${styleSettings.font} text-${textColorClass}`}>
+      <p className="text-4xl font-bold mb-4 text-center">DCCPhotoEdition</p>
+
+      <p className="mb-6 text-xl text-center">Procesamiento de Imágenes con WASM</p>
+
+      {!wasmLoaded && <p className="text-gray-500 text-center">Cargando módulo WASM...</p>}
+
+      <input 
+        type="file" 
+        accept="image/*" 
+        onChange={handleFileUpload} 
+        className="w-full mb-4 p-2 bg-gray-700 text-white rounded-md" 
+      />
+
       {imageData && (
         <>
-          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="original">Original</option> {/* Opción para volver al color original */}
+          <label className={labelClass}>Filtro:</label>
+          <select 
+            value={filter} 
+            onChange={(e) => setFilter(e.target.value)} 
+            className={selectClass}
+          >
+            <option value="original">Original</option>
             <option value="grayscale">Escala de grises</option>
             <option value="invert">Invertir colores</option>
             <option value="sepia">Sepia</option>
@@ -120,10 +162,9 @@ const ImageProcessor = () => {
             <option value="contrast">Contraste</option>
           </select>
 
-          {/* Ajustes de brillo y contraste */}
           {filter === 'brightness' && (
             <div>
-              <label>Brillo:</label>
+              <label className={labelClass}>Brillo:</label>
               <input
                 type="range"
                 min="0.1"
@@ -131,13 +172,14 @@ const ImageProcessor = () => {
                 step="0.1"
                 value={brightnessFactor}
                 onChange={(e) => setBrightnessFactor(e.target.value)}
+                className="w-full p-2 bg-gray-700 rounded-md"
               />
             </div>
           )}
 
           {filter === 'contrast' && (
             <div>
-              <label>Contraste:</label>
+              <label className={labelClass}>Contraste:</label>
               <input
                 type="range"
                 min="0.1"
@@ -145,28 +187,66 @@ const ImageProcessor = () => {
                 step="0.1"
                 value={contrastFactor}
                 onChange={(e) => setContrastFactor(e.target.value)}
+                className="w-full p-2 bg-gray-700 rounded-md"
               />
             </div>
           )}
 
-          <button onClick={processImage}>Procesar Imagen</button>
-          {imageProcessed && <button onClick={saveImageData}>Guardar Imagen</button>} {/* Solo mostrar después de procesar */}
+          <div className="mt-4 flex justify-center gap-6">
+            <button 
+              onClick={processImage} 
+              className={`p-2 ${
+                previewSettings.borderRadius === 'rounded' ? 'rounded-2xl' : ''
+              }`}
+              style={{
+                backgroundColor: previewSettings.theme === 'dark' ? '#333' : '#ddd',
+                color: previewSettings.textColor,
+                fontFamily: getFontFamily(previewSettings.fontFamily),
+              }}
+            >
+              Procesar Imagen
+            </button>
+
+            {imageProcessed && (
+              <button 
+                onClick={saveImageData} 
+                className={`p-2 ${
+                  previewSettings.borderRadius === 'rounded' ? 'rounded-2xl' : ''
+                }`}
+                style={{
+                  backgroundColor: previewSettings.theme === 'dark' ? '#333' : '#ddd',
+                  color: previewSettings.textColor,
+                  fontFamily: getFontFamily(previewSettings.fontFamily),
+                }}
+              >
+                Guardar Imagen
+              </button>
+
+
+
+
+
+
+            )}
+          </div>
         </>
       )}
-      <div className='canvas-container'>
+
+      
+
+      <div className='mt-6'>
         {processedData && (
-          <div className='canvas-wrapper'>
-            <h3>Imagen Procesada</h3>
+          <div className="text-center">
+            <h3 className="text-xl font-semibold mb-4">Imagen Procesada</h3>
             <canvas
               ref={canvasRef}
               width={processedData.width}
               height={processedData.height}
-              style={{ border: '1px solid black' }}
+              className="border border-gray-500 mx-auto"
             />
           </div>
         )}
       </div>
-      
     </div>
   );
 };
