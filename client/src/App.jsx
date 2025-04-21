@@ -58,24 +58,34 @@ function App() {
     ? 'rounded-xl'
     : 'rounded-md';
 
-  return (
-    <div className={`min-h-screen ${fontClass} ${borderRadiusClass}`}>
-      <header className="p-4 shadow">
-        <nav>
-          <ul className="flex gap-4">
-            <li><a href="#" onClick={() => setCurrentSection('home')}>¡Comencemos!</a></li>
-            <li><a href="#" onClick={() => setCurrentSection('gallery')}>Galería</a></li>
-            <li><a href="#" onClick={() => setCurrentSection('about')}>Nosotros</a></li>
-            <li><a href="#" onClick={() => setCurrentSection('settings')}>Estilos</a></li>
-          </ul>
-        </nav>
-      </header>
-
-      <main className="p-6">
-        {renderSection()}
-      </main>
-    </div>
-  );
+    return (
+      <div className={`min-h-screen ${fontClass} ${borderRadiusClass}`}>
+        <header className="p-4 shadow">
+          <nav>
+            <ul className="flex gap-4">
+              <li><a href="#" onClick={() => setCurrentSection('home')}>¡Comencemos!</a></li>
+              <li><a href="#" onClick={() => setCurrentSection('gallery')}>Galería</a></li>
+              <li><a href="#" onClick={() => setCurrentSection('about')}>Nosotros</a></li>
+              <li><a href="#" onClick={() => setCurrentSection('settings')}>Estilos</a></li>
+            </ul>
+          </nav>
+        </header>
+    
+        <main
+          className="flex flex-col items-center justify-center p-6 text-[var(--custom-text-color)]"
+          style={{
+            fontFamily: styleSettings.font === 'serif'
+              ? 'ui-serif, Georgia'
+              : styleSettings.font === 'mono'
+              ? 'ui-monospace, SFMono-Regular'
+              : 'ui-sans-serif, system-ui',
+          }}
+        >
+          {renderSection()}
+        </main>
+      </div>
+    );
+    
 }
 
 export default App;
