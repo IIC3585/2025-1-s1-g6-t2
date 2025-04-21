@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 // Importa el módulo WASM desde public/pkg
-import init, { grayscale, invert } from '../../public/pkg/image_filter.js';
+import init, { grayscale, invert, sepia, brightness, contrast } from '../../public/pkg/image_filter.js';
 import { saveImage, getImages, clearImages } from '../db';
 import './ImageProcessor.css'; 
 
@@ -10,10 +10,10 @@ const ImageProcessor = () => {
   const [imageData, setImageData] = useState(null); // Datos de la imagen original
   const [processedData, setProcessedData] = useState(null); // Imagen procesada
   const [filter, setFilter] = useState('original');
+  const [brightnessFactor, setBrightnessFactor] = useState(1); // Control de brillo
+  const [contrastFactor, setContrastFactor] = useState(1); // Control de contraste
   const [imageProcessed, setImageProcessed] = useState(false); // Estado para controlar si la imagen está procesada
-  const [savedImages, setSavedImages] = useState([]);
-  const [isImagesLoaded, setIsImagesLoaded] = useState(false); // Estado para saber si se presionó el botón de cargar imágenes
-  const [clearMessage, setClearMessage] = useState(''); // Mensaje para confirmar que la base de datos se vació
+  
   const [originalImageData, setOriginalImageData] = useState(null); // Almacena la imagen original
 
   // Referencia al elemento canvas
@@ -65,6 +65,12 @@ const ImageProcessor = () => {
       result = grayscale(imageData.data.data); // La función espera un array de píxeles
     } else if (filter === 'invert') {
       result = invert(imageData.data.data);
+    } else if (filter === 'sepia') {
+      result = sepia(imageData.data.data);
+    } else if (filter === 'brightness') {
+      result = brightness(imageData.data.data, brightnessFactor);
+    } else if (filter === 'contrast') {
+      result = contrast(imageData.data.data, contrastFactor);
     } else if (filter === 'original') {
       result = originalImageData.data.data; // Restaurar la imagen original
     }
@@ -78,7 +84,7 @@ const ImageProcessor = () => {
     );
     setProcessedData(newImageData);
     setImageProcessed(true); // Indicar que la imagen fue procesada
-    notifyProcessComplete();
+    // notifyProcessComplete();
   };
 
   const saveImageData = () => {
@@ -115,23 +121,10 @@ const ImageProcessor = () => {
     });
   };
 
-  function notifyProcessComplete() {
-    if (Notification.permission === 'granted') {
-      new Notification('Procesamiento de imagen', {
-        body: '¡La imagen se ha procesado correctamente!'
-      });
-    }
-  }
-
-  useEffect(() => {
-    if (Notification.permission !== 'granted') {
-      Notification.requestPermission();
-    }
-  }, []);
-
   return (
     <div>
-      <h2>Procesamiento de Imágenes con WASM</h2>
+      <h1>DCCPhotoEdition</h1>
+      <h4>Procesamiento de Imágenes con WASM</h4>
       {!wasmLoaded && <p>Cargando módulo WASM...</p>}
       <input type="file" accept="image/*" onChange={handleFileUpload} />
       {imageData && (
@@ -140,61 +133,61 @@ const ImageProcessor = () => {
             <option value="original">Original</option> {/* Opción para volver al color original */}
             <option value="grayscale">Escala de grises</option>
             <option value="invert">Invertir colores</option>
+            <option value="sepia">Sepia</option>
+            <option value="brightness">Brillo</option>
+            <option value="contrast">Contraste</option>
           </select>
+
+          {/* Ajustes de brillo y contraste */}
+          {filter === 'brightness' && (
+            <div>
+              <label>Brillo:</label>
+              <input
+                type="range"
+                min="0.1"
+                max="2"
+                step="0.1"
+                value={brightnessFactor}
+                onChange={(e) => setBrightnessFactor(e.target.value)}
+              />
+            </div>
+          )}
+
+          {filter === 'contrast' && (
+            <div>
+              <label>Contraste:</label>
+              <input
+                type="range"
+                min="0.1"
+                max="2"
+                step="0.1"
+                value={contrastFactor}
+                onChange={(e) => setContrastFactor(e.target.value)}
+              />
+            </div>
+          )}
+
           <button onClick={processImage}>Procesar Imagen</button>
           {imageProcessed && <button onClick={saveImageData}>Guardar Imagen</button>} {/* Solo mostrar después de procesar */}
         </>
       )}
       {/* El canvas donde se renderizará la imagen procesada */}
       <div className='canvas-container'>
-          {processedData && (
-            <div className='canvas-wrapper'>
-              <h3>Imagen Procesada</h3>
-              <canvas
-                ref={canvasRef}
-                width={processedData.width}
-                height={processedData.height}
-                style={{ border: '1px solid black' }}
-              />
-            </div>
-          )}
+        {processedData && (
+          <div className='canvas-wrapper'>
+            <h3>Imagen Procesada</h3>
+            <canvas
+              ref={canvasRef}
+              width={processedData.width}
+              height={processedData.height}
+              style={{ border: '1px solid black' }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Mostrar imágenes guardadas */}
-      <div>
-        <h3>Imágenes Guardadas</h3>
-        <button onClick={loadSavedImages}>Cargar imágenes guardadas</button>
-        <div>
-          {isImagesLoaded && savedImages.length === 0 ? (  // Mostrar solo después de hacer clic
-            <p>No hay imágenes guardadas</p>
-          ) : (
-            savedImages.map((image, index) => (
-              <div key={index}>
-                <canvas
-                  width={image.width}
-                  height={image.height}
-                  style={{ border: '1px solid black' }}
-                  ref={(canvas) => {
-                    if (canvas) {
-                      const ctx = canvas.getContext('2d');
-                      const imgData = new ImageData(
-                        new Uint8ClampedArray(image.data),
-                        image.width,
-                        image.height
-                      );
-                      ctx.putImageData(imgData, 0, 0);
-                    }
-                  }}
-                />
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Botón para vaciar la base de datos */}
-      <button onClick={emptyDatabase}>Vaciar Base de Datos</button>
-      {clearMessage && <p>{clearMessage}</p>} {/* Mensaje de confirmación */}
+      
     </div>
   );
 };

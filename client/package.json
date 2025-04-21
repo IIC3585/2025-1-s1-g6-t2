@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "bootstrap": "^5.3.5",
+    "crypto": "^1.0.1",
     "idb": "^8.0.2",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.9",

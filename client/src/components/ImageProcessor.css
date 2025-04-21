@@ -1,0 +1,51 @@
+/* ImageProcessor.css */
+
+.canvas-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.canvas-wrapper {
+  display: inline-block;
+  margin-top: 20px;
+  background-color: #333;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+h2 {
+  font-size: 2.5em;
+  color: #fff;
+}
+
+h3 {
+  font-size: 1.8em;
+  color: #fff;
+}
+
+input[type="file"] {
+  margin-top: 20px;
+}
+
+select,
+input[type="range"] {
+  font-size: 1.2em;
+  margin: 0.5em;
+}
+
+button {
+  margin-top: 10px;
+}
+
+input[type="file"] {
+  background-color: #1a1a1a;
+  color: white;
+  padding: 1em;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+input[type="file"]:hover {
+  background-color: #646cff;
+}
