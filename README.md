@@ -13,8 +13,12 @@
 
 ## Otras Funcionalidades
 
+## Se tiene un navbar para moverse entre los distintos componentes de la web.
+
 ## Todas las imágenes procesadas mediante los filtros pueden ser guardadas en una base de datos para que los usuarios puedan conservarlas.
 
 ## Existe una sección de Galería, donde se pueden visualizar las imágenes guardadas. Por lo mismo el usuario puede eliminar las imagenes si el lo desea.
 
 ## También se incluye una sección de "Nosotros", que aunque es simple, presenta el objetivo general del proyecto.
+
+## En el componente de estilos se puede cambiar la configuración los estilos de la pagina (valga la redundancia), por ejemplo el tipo de letra, fondo oscuro o claro, entre otros.
